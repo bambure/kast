@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kast">
+<meta name="theme-color" content="#EDF1F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#10161E" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<title>Kast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF1F5; --surface:#FFFFFF; --sunk:#E3E9EF; --ink:#18222E; --muted:#5E6B7B; --line:#D3DBE4;
+  --accent:#E9B949; --accent-ink:#3A2C05; --denim:#2F4E78; --danger:#B4372F;
+  --display:"Bricolage Grotesque", ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+  --body:-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+  --tabh:64px;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10161E; --surface:#18212C; --sunk:#141B24; --ink:#E9EEF3; --muted:#97A3B1; --line:#2A3644;
+    --accent:#E9B949; --accent-ink:#2A1F02; --denim:#9DBBE3; --danger:#E0766E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10161E; --surface:#18212C; --sunk:#141B24; --ink:#E9EEF3; --muted:#97A3B1; --line:#2A3644;
+  --accent:#E9B949; --accent-ink:#2A1F02; --denim:#9DBBE3; --danger:#E0766E;
+}
+:root{ box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+html{ scroll-padding-top:env(safe-area-inset-top,0px); -webkit-text-size-adjust:100%; }
+*,*::before,*::after{ box-sizing:inherit; }
+html,body{ height:100%; }
+body{ margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 var(--body); -webkit-tap-highlight-color:transparent; }
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
+input,select{ font:inherit; color:inherit; }
+img{ max-width:100%; display:block; }
+:focus-visible{ outline:2px solid var(--denim); outline-offset:2px; border-radius:8px; }
+[hidden]{ display:none !important; }
+
+main{ max-width:560px; margin:0 auto; padding:16px 18px calc(var(--tabh) + 28px + env(safe-area-inset-bottom,0px)); }
+.view{ display:none; }
+.view.active{ display:block; }
+
+h1,h2,h3{ font-family:var(--display); margin:0; letter-spacing:-0.01em; }
+h1{ font-size:2rem; line-height:1.08; font-weight:800; }
+h2{ font-size:1.375rem; line-height:1.15; font-weight:700; }
+h3{ font-size:1.0625rem; font-weight:700; }
+p{ margin:0; }
+.muted{ color:var(--muted); }
+small{ color:var(--muted); font-size:.8125rem; }
+
+/* Today header */
+.today-head{ padding:6px 2px 14px; }
+.today-head .date{ color:var(--muted); font-size:.9375rem; margin-bottom:2px; }
+
+/* Weather */
+.wx{ display:grid; grid-template-columns:auto 1fr; gap:4px 14px; align-items:center; padding:14px 16px; background:var(--surface); border-radius:18px; border:1px solid var(--line); }
+.wx-big{ display:flex; align-items:center; gap:6px; }
+.wx-ico{ font-size:1.9rem; line-height:1; }
+.wx-temp{ font-family:var(--display); font-weight:800; font-size:2.25rem; line-height:1; font-variant-numeric:tabular-nums; }
+.wx-desc{ font-weight:600; }
+.wx-sub{ color:var(--muted); font-size:.875rem; }
+.wx-advice{ grid-column:1 / -1; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-top:8px; padding-top:10px; border-top:1px dashed var(--line); font-size:.9375rem; }
+.wx-advice .linkbtn{ flex:0 0 auto; padding:0 2px; }
+.wx-manual{ display:inline-block; font-size:.75rem; padding:1px 7px; border-radius:99px; background:var(--accent); color:var(--accent-ink); font-weight:600; margin-left:6px; vertical-align:2px; }
+.linkbtn{ color:var(--denim); font-weight:600; font-size:.9375rem; padding:6px 2px; }
+.wx-setup{ grid-template-columns:1fr; }
+.wx-setup .row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+
+/* Occasion selector */
+.occ{ display:flex; gap:6px; margin:16px 0 14px; overflow-x:auto; scrollbar-width:none; }
+.occ::-webkit-scrollbar{ display:none; }
+.occ button{ flex:1 0 auto; padding:9px 14px; border-radius:99px; background:var(--sunk); color:var(--muted); font-weight:600; font-size:.9375rem; border:1px solid transparent; }
+.occ button[aria-selected="true"]{ background:var(--ink); color:var(--bg); }
+
+/* Outfit flat-lay */
+.outfit{ display:grid; grid-template-columns:1fr 1fr; grid-auto-flow:row dense; gap:10px; }
+.piece{ position:relative; display:block; width:100%; aspect-ratio:1/1; background:var(--surface); border-radius:16px; border:1px solid var(--line); overflow:hidden; text-align:left; }
+.piece.hero{ grid-row:span 2; aspect-ratio:auto; min-height:100%; }
+.piece img{ position:absolute; inset:10px 10px 30px; width:calc(100% - 20px); height:calc(100% - 40px); object-fit:contain; }
+.piece .slot{ position:absolute; left:12px; bottom:9px; font-size:.8125rem; color:var(--muted); font-weight:600; max-width:calc(100% - 24px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.piece.missing{ display:flex; align-items:center; justify-content:center; padding:14px; text-align:center; color:var(--muted); font-size:.875rem; border-style:dashed; background:transparent; }
+/* care-label tag: the one signature detail */
+.tag{ position:absolute; top:10px; right:0; padding:3px 9px 3px 16px; background:var(--accent); color:var(--accent-ink); font-size:.75rem; font-weight:700; border-radius:4px 0 0 4px; clip-path:polygon(8px 0,100% 0,100% 100%,8px 100%,0 50%); font-variant-numeric:tabular-nums; }
+.tag::before{ content:""; position:absolute; left:8px; top:50%; width:4px; height:4px; margin-top:-2px; border-radius:50%; background:var(--accent-ink); opacity:.55; }
+.outfit.worn .piece{ opacity:.82; }
+.notes{ margin:12px 2px 0; padding:0; list-style:none; font-size:.875rem; color:var(--muted); }
+.notes li{ padding:3px 0; }
+.notes li::before{ content:"! "; color:var(--danger); font-weight:700; }
+
+.actions{ display:flex; gap:10px; margin-top:16px; }
+.btn{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:50px; padding:0 18px; border-radius:14px; font-weight:700; font-size:1rem; }
+.btn.primary{ background:var(--ink); color:var(--bg); }
+.btn.secondary{ background:var(--surface); border:1px solid var(--line); }
+.btn.danger{ color:var(--danger); background:transparent; border:1px solid var(--line); }
+.btn.small{ min-height:38px; flex:0 0 auto; padding:0 14px; font-size:.9375rem; border-radius:11px; }
+.btn[disabled]{ opacity:.45; }
+.worn-banner{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; padding:12px 14px; border-radius:14px; background:var(--surface); border:1px solid var(--line); }
+
+/* Empty state */
+.empty{ padding:28px 20px; text-align:center; background:var(--surface); border:1px dashed var(--line); border-radius:18px; }
+.empty h2{ margin-bottom:6px; }
+.empty p{ color:var(--muted); margin-bottom:16px; }
+
+/* Section header */
+.sec-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:6px 2px 12px; }
+
+/* Closet */
+.filters{ display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:12px; scrollbar-width:none; }
+.filters::-webkit-scrollbar{ display:none; }
+.filters button{ flex:0 0 auto; padding:7px 13px; border-radius:99px; background:var(--sunk); color:var(--muted); font-weight:600; font-size:.875rem; }
+.filters button[aria-pressed="true"]{ background:var(--denim); color:var(--bg); }
+.grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:10px; }
+.item{ display:flex; flex-direction:column; text-align:left; }
+.item .ph{ position:relative; display:block; aspect-ratio:1/1; background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+.item .ph img{ position:absolute; inset:8px; width:calc(100% - 16px); height:calc(100% - 16px); object-fit:contain; }
+.item.dirty .ph img{ opacity:.4; }
+.item .nm{ font-size:.875rem; font-weight:600; margin-top:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.item .st{ font-size:.75rem; color:var(--muted); }
+.item .tag{ top:7px; font-size:.6875rem; }
+
+/* Laundry */
+.list{ display:flex; flex-direction:column; gap:8px; }
+.row-item{ display:grid; grid-template-columns:56px 1fr auto; align-items:center; gap:12px; padding:8px; background:var(--surface); border:1px solid var(--line); border-radius:14px; }
+.row-item .thumb{ width:56px; height:56px; border-radius:10px; background:var(--sunk); position:relative; overflow:hidden; }
+.row-item .thumb img{ position:absolute; inset:4px; width:calc(100% - 8px); height:calc(100% - 8px); object-fit:contain; }
+.row-item .nm{ font-weight:600; font-size:.9375rem; }
+.row-item .st{ font-size:.8125rem; color:var(--muted); }
+
+/* Settings */
+.group{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin-bottom:14px; }
+.group h3{ margin-bottom:4px; }
+.group p{ font-size:.9375rem; }
+.group .row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.seg{ display:flex; background:var(--sunk); border-radius:12px; padding:3px; gap:3px; margin-top:10px; }
+.seg button{ flex:1; padding:9px 6px; border-radius:9px; font-weight:600; font-size:.875rem; color:var(--muted); }
+.seg button[aria-pressed="true"]{ background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(10,20,30,.12); }
+.search-row{ display:flex; gap:8px; margin-top:12px; }
+.input{ flex:1; min-width:0; min-height:46px; padding:0 14px; border-radius:12px; border:1px solid var(--line); background:var(--bg); font-size:1rem; }
+.results{ display:flex; flex-direction:column; margin-top:8px; }
+.results button{ text-align:left; padding:10px 4px; border-bottom:1px solid var(--line); }
+
+/* Tab bar */
+.tabbar{ position:fixed; left:0; right:0; bottom:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom,0px); }
+.tabbar nav{ max-width:560px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); height:var(--tabh); }
+.tabbar button{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:.6875rem; font-weight:600; color:var(--muted); position:relative; }
+.tabbar button[aria-current="page"]{ color:var(--ink); }
+.tabbar svg{ width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.badge{ position:absolute; top:7px; left:calc(50% + 6px); min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:var(--accent); color:var(--accent-ink); font-size:.6875rem; line-height:18px; font-weight:700; text-align:center; }
+
+/* Sheet */
+.sheet{ position:fixed; inset:0; z-index:50; }
+.sheet .scrim{ position:absolute; inset:0; background:rgba(8,14,22,.45); opacity:0; transition:opacity .2s; }
+.sheet .panel{ position:absolute; left:0; right:0; bottom:0; max-width:560px; margin:0 auto; max-height:calc(100% - 40px - env(safe-area-inset-top,0px)); overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; background:var(--bg); border-radius:22px 22px 0 0; padding:8px 18px calc(22px + env(safe-area-inset-bottom,0px)); transform:translateY(100%); transition:transform .24s cubic-bezier(.2,.8,.2,1); }
+.sheet.open .scrim{ opacity:1; }
+.sheet.open .panel{ transform:none; }
+.grabber{ width:40px; height:5px; border-radius:3px; background:var(--line); margin:4px auto 10px; }
+.sheet-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.field{ margin-bottom:18px; }
+.field > .lbl{ display:block; font-weight:700; font-size:.9375rem; margin-bottom:8px; }
+.chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.chips button{ padding:8px 13px; border-radius:99px; background:var(--surface); border:1px solid var(--line); font-weight:600; font-size:.875rem; color:var(--muted); }
+.chips button[aria-pressed="true"]{ background:var(--ink); border-color:var(--ink); color:var(--bg); }
+.swatches{ display:flex; flex-wrap:wrap; gap:10px; }
+.swatches button{ width:34px; height:34px; border-radius:50%; border:1px solid rgba(120,130,140,.45); position:relative; }
+.swatches button[aria-pressed="true"]{ box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--ink); }
+.photo-pick{ position:relative; display:flex; align-items:center; justify-content:center; aspect-ratio:4/3; border-radius:18px; background:var(--surface); border:1.5px dashed var(--line); overflow:hidden; margin-bottom:18px; cursor:pointer; }
+.photo-pick img{ position:absolute; inset:10px; width:calc(100% - 20px); height:calc(100% - 20px); object-fit:contain; }
+.photo-pick .ph-cta{ text-align:center; color:var(--muted); font-weight:600; }
+.photo-pick .ph-cta strong{ display:block; color:var(--ink); font-family:var(--display); font-size:1.125rem; margin-bottom:2px; }
+.photo-pick .change{ position:absolute; right:10px; bottom:10px; padding:5px 10px; border-radius:99px; background:var(--ink); color:var(--bg); font-size:.8125rem; font-weight:600; }
+.photo-pick input{ position:absolute; width:1px; height:1px; opacity:0; }
+.analyzing{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:color-mix(in srgb, var(--bg) 72%, transparent); font-weight:700; }
+.spinner{ width:28px; height:28px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--ink); animation:spin .8s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+.ai-note{ display:flex; gap:8px; align-items:flex-start; margin:-6px 0 18px; padding:10px 12px; border-radius:12px; background:var(--surface); border:1px solid var(--line); font-size:.875rem; }
+.ai-note b{ color:var(--denim); }
+.stepper{ display:inline-flex; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:12px; }
+.stepper button{ width:46px; height:44px; font-size:1.375rem; font-weight:600; }
+.stepper output{ min-width:84px; text-align:center; font-weight:700; font-variant-numeric:tabular-nums; }
+.switch{ display:flex; align-items:center; justify-content:space-between; gap:12px; font-weight:600; }
+.switch input{ width:22px; height:22px; accent-color:var(--ink); }
+.sheet .actions{ flex-wrap:wrap; }
+.swap-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.swap-grid .item.off .ph{ opacity:.5; }
+.none-opt{ display:flex; align-items:center; justify-content:center; aspect-ratio:1/1; border-radius:14px; border:1px dashed var(--line); color:var(--muted); font-weight:600; font-size:.875rem; text-align:center; padding:8px; }
+.sub-lbl{ font-weight:700; font-size:.875rem; color:var(--muted); margin:16px 0 8px; }
+
+/* Toast */
+.toast{ position:fixed; left:50%; bottom:calc(var(--tabh) + 18px + env(safe-area-inset-bottom,0px)); transform:translate(-50%,20px); z-index:60; padding:11px 16px; border-radius:12px; background:var(--ink); color:var(--bg); font-weight:600; font-size:.9375rem; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; max-width:calc(100% - 36px); }
+.toast.show{ opacity:1; transform:translate(-50%,0); }
+
+@media (prefers-reduced-motion: reduce){
+  .sheet .panel,.sheet .scrim,.toast{ transition:none; }
+  .spinner{ animation-duration:2.4s; }
+}
+</style>
+</head>
+<body>
+<main>
+  <section class="view active" id="view-today" aria-label="Vandaag"></section>
+  <section class="view" id="view-closet" aria-label="Kast"></section>
+  <section class="view" id="view-laundry" aria-label="Wasmand"></section>
+  <section class="view" id="view-settings" aria-label="Instellingen"></section>
+</main>
+
+<div class="tabbar">
+  <nav aria-label="Navigatie">
+    <button data-tab="today" aria-current="page">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+      Vandaag
+    </button>
+    <button data-tab="closet">
+      <svg viewBox="0 0 24 24"><path d="M10 6.2a2 2 0 1 1 2.6 1.9c-.4.1-.6.5-.6.9V10"/><path d="M12 10 2.8 16.4c-.7.5-.4 1.6.5 1.6h17.4c.9 0 1.2-1.1.5-1.6L12 10Z"/></svg>
+      Kast
+    </button>
+    <button data-tab="laundry">
+      <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2.5"/><circle cx="12" cy="13" r="4.5"/><path d="M7 6.5h1.5M11 6.5h1"/></svg>
+      Wasmand
+      <span class="badge" id="laundry-badge" hidden></span>
+    </button>
+    <button data-tab="settings">
+      <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+      Instellingen
+    </button>
+  </nav>
+</div>
+
+<div class="sheet" id="sheet" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="import-file" accept="application/json,.json" hidden>
+<input type="file" id="bulk-file" accept="image/*" multiple hidden>
+
+<script>
+"use strict";
+/* ---------- Constants ---------- */
+const OCC = [
+  { id:"werk", label:"Werk" },
+  { id:"casual", label:"Casual" },
+  { id:"sport", label:"Sport" },
+  { id:"uitgaan", label:"Uitgaan" }
+];
+const CATS = {
+  top:    { noun:"Top", label:"Top",            hint:"T-shirt, hemd, polo, blouse", wash:1, warmth:["T-shirt / dun","Lange mouw","Dik / flanel"] },
+  mid:    { noun:"Trui", label:"Trui of vest",   hint:"Trui, hoodie, cardigan, fleece", wash:3, warmth:["Dun","Gemiddeld","Dik / wol"] },
+  bottom: { noun:"Broek", label:"Onderstuk",      hint:"Broek, short, rok", wash:4, warmth:["Short / rok","Broek","Dikke broek"] },
+  full:   { noun:"Jurk", label:"Jurk of overall",hint:"Vervangt top en onderstuk", wash:1, warmth:["Zomers","Tussenseizoen","Winters"] },
+  outer:  { noun:"Jas", label:"Jas",            hint:"Jas, blazer, regenjas", wash:0, warmth:["Licht / regenjas","Tussenseizoen","Winterjas"] },
+  shoes:  { noun:"Schoenen", label:"Schoenen",       hint:"", wash:0, warmth:["Open / zomers","Gewoon","Laarzen"] }
+};
+const CAT_ORDER = ["top","mid","bottom","full","outer","shoes"];
+const COLORS = [
+  ["zwart","#1d1f22",true],["wit","#f6f6f4",true],["grijs","#9aa2ab",true],["navy","#22324f",true],
+  ["beige","#d9c8a9",true],["denim","#4d6d96",true],["bruin","#7a5438",true],["groen","#4f7a4a",false],
+  ["olijf","#7c7a45",false],["blauw","#3d7bd9",false],["rood","#c4352f",false],["bordeaux","#6e1f2d",false],
+  ["roze","#e8a3b7",false],["geel","#e9c13f",false],["oranje","#df7a32",false],["paars","#7b56a8",false],
+  ["print","conic-gradient(#c4352f,#e9c13f,#4f7a4a,#3d7bd9,#7b56a8,#c4352f)",false]
+];
+const COLOR_MAP = Object.fromEntries(COLORS.map(c => [c[0], { css:c[1], neutral:c[2] }]));
+const OFFSETS = { koud:-3, normaal:0, warm:3 };
+const AI_MODEL = "claude-haiku-5-5";
+
+/* ---------- Helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const pad = n => String(n).padStart(2,"0");
+const dayKey = d => d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+const todayKey = () => dayKey(new Date());
+function daysSince(key){
+  if(!key) return 99;
+  const [y,m,d] = key.split("-").map(Number);
+  const then = new Date(y, m-1, d);
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.round((now - then) / 86400000);
+}
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ---------- IndexedDB ---------- */
+let dbPromise;
+function openDB(){
+  if(dbPromise) return dbPromise;
+  dbPromise = new Promise((res, rej) => {
+    const r = indexedDB.open("kast", 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      if(!d.objectStoreNames.contains("items")) d.createObjectStore("items", { keyPath:"id" });
+      if(!d.objectStoreNames.contains("log")) d.createObjectStore("log", { keyPath:"key" });
+      if(!d.objectStoreNames.contains("kv")) d.createObjectStore("kv");
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return dbPromise;
+}
+function tx(store, mode, fn){
+  return openDB().then(d => new Promise((res, rej) => {
+    const t = d.transaction(store, mode);
+    const req = fn(t.objectStore(store));
+    let out;
+    if(req) req.onsuccess = () => { out = req.result; };
+    t.oncomplete = () => res(out);
+    t.onerror = () => rej(t.error);
+    t.onabort = () => rej(t.error);
+  }));
+}
+const idb = {
+  all: s => tx(s, "readonly", st => st.getAll()),
+  get: (s,k) => tx(s, "readonly", st => st.get(k)),
+  put: (s,v,k) => tx(s, "readwrite", st => k === undefined ? st.put(v) : st.put(v,k)),
+  del: (s,k) => tx(s, "readwrite", st => st.delete(k)),
+  clear: s => tx(s, "readwrite", st => st.clear())
+};
+
+/* ---------- State ---------- */
+const S = {
+  items: [],
+  kv: {},
+  weather: null,
+  wxLoading: false,
+  wxError: false,
+  occ: "werk",
+  tab: "today",
+  closetFilter: "all",
+  wornToday: {}
+};
+const byId = id => S.items.find(i => i.id === id);
+const isDirty = it => !!it.laundry || (it.washEvery > 0 && (it.wears||0) >= it.washEvery);
+const saveKV = () => idb.put("kv", S.kv, "settings");
+
+const photoURLs = new Map();
+function photoURL(it){
+  if(!it || !it.photo) return "";
+  let u = photoURLs.get(it.id);
+  if(!u){ u = URL.createObjectURL(it.photo); photoURLs.set(it.id, u); }
+  return u;
+}
+function dropURL(id){
+  const u = photoURLs.get(id);
+  if(u){ URL.revokeObjectURL(u); photoURLs.delete(id); }
+}
+
+/* ---------- Weather ---------- */
+function wxInfo(code){
+  if(code == null) return ["🌡️","Zelf ingesteld"];
+  if(code === 0) return ["☀️","Helder"];
+  if(code === 1) return ["🌤️","Overwegend zonnig"];
+  if(code === 2) return ["⛅","Half bewolkt"];
+  if(code === 3) return ["☁️","Bewolkt"];
+  if(code === 45 || code === 48) return ["🌫️","Mist"];
+  if(code >= 51 && code <= 57) return ["🌦️","Motregen"];
+  if(code >= 61 && code <= 67) return ["🌧️","Regen"];
+  if(code >= 71 && code <= 77) return ["🌨️","Sneeuw"];
+  if(code >= 80 && code <= 82) return ["🌦️","Buien"];
+  if(code >= 85 && code <= 86) return ["🌨️","Sneeuwbuien"];
+  if(code >= 95) return ["⛈️","Onweer"];
+  return ["🌡️",""];
+}
+async function loadWeather(force){
+  const loc = S.kv.loc;
+  if(!loc){ S.weather = null; return; }
+  const c = S.kv.wx;
+  const fresh = c && c.date === todayKey() && c.lat === loc.lat && c.lon === loc.lon && (Date.now() - c.at) < 3*3600e3;
+  if(c && c.date === todayKey() && c.lat === loc.lat) S.weather = c;
+  if(fresh && !force) return;
+  S.wxLoading = true;
+  try{
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=" + loc.lat + "&longitude=" + loc.lon +
+      "&hourly=temperature_2m,apparent_temperature,precipitation_probability,weather_code&timezone=auto&forecast_days=1";
+    const r = await fetch(url);
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    const h = j.hourly;
+    const idx = h.time.map((t,i) => [Number(t.slice(11,13)), i]).filter(([hr]) => hr >= 7 && hr <= 19).map(([,i]) => i);
+    const pick = arr => idx.map(i => arr[i]).filter(v => v != null);
+    const feels = pick(h.apparent_temperature), temps = pick(h.temperature_2m), rain = pick(h.precipitation_probability), codes = pick(h.weather_code);
+    if(!feels.length) throw new Error("Geen data");
+    S.weather = {
+      date: todayKey(), at: Date.now(), lat: loc.lat, lon: loc.lon,
+      feels: Math.round(feels.reduce((a,b) => a+b, 0) / feels.length),
+      tmin: Math.round(Math.min(...temps)), tmax: Math.round(Math.max(...temps)),
+      rain: rain.length ? Math.max(...rain) : 0,
+      code: codes.length ? Math.max(...codes) : null
+    };
+    S.kv.wx = S.weather;
+    S.wxError = false;
+    await saveKV();
+  }catch(e){
+    S.wxError = true;
+  }finally{
+    S.wxLoading = false;
+  }
+}
+function effWeather(){
+  const p = S.kv.plan;
+  if(p && p.date === todayKey() && p.override) return { feels:p.override.feels, rain:p.override.rain ? 80 : 0, code:null, manual:true };
+  return S.weather;
+}
+const effT = w => (w ? w.feels : 15) + (OFFSETS[S.kv.feel] || 0);
+const isRain = w => !!w && w.rain >= 50;
+
+function advice(w){
+  if(!w) return "";
+  const T = effT(w);
+  let a;
+  if(T >= 23) a = "Warm. Iets lichts volstaat.";
+  else if(T >= 18) a = "Aangenaam. Een extra laag is niet nodig.";
+  else if(T >= 14) a = "Fris. Neem een extra laag mee.";
+  else if(T >= 9) a = "Koel. Trui en jas.";
+  else if(T >= 3) a = "Koud. Warme trui en een stevige jas.";
+  else a = "Het vriest bijna. Kleed je warm aan.";
+  if(isRain(w)) a += " Grote kans op regen: kies iets waterdichts.";
+  return a;
+}
+
+/* ---------- Outfit engine ---------- */
+const Y = w => ({ want:"yes", w }), M = w => ({ want:"maybe", w }), N = { want:"no", w:0 };
+function targets(T, rain){
+  let t;
+  if(T >= 23)      t = { top:Y(1),   bottom:Y(1),   full:Y(1),   mid:N,      outer:N };
+  else if(T >= 18) t = { top:Y(1),   bottom:Y(1.8), full:Y(1.2), mid:N,      outer:N };
+  else if(T >= 14) t = { top:Y(1.3), bottom:Y(2),   full:Y(1.6), mid:M(1),   outer:M(1) };
+  else if(T >= 9)  t = { top:Y(1.6), bottom:Y(2),   full:Y(2),   mid:Y(1.6), outer:Y(1.8) };
+  else if(T >= 3)  t = { top:Y(2),   bottom:Y(2.4), full:Y(2.5), mid:Y(2.3), outer:Y(2.6) };
+  else             t = { top:Y(2.2), bottom:Y(3),   full:Y(3),   mid:Y(3),   outer:Y(3) };
+  t.shoes = Y(T < 5 ? 2.8 : T >= 22 ? 1.2 : 2);
+  if(rain && t.outer.want !== "yes") t.outer = Y(1);
+  return t;
+}
+function itemScore(it, slot, t, rain){
+  let s = -Math.abs((it.warmth || 2) - t.w) * 3;
+  const d = daysSince(it.lastWorn);
+  s += Math.min(d, 14) * 0.35;
+  if(d === 0) s -= 8;
+  else if(d === 1) s -= 5;
+  if(rain && (slot === "outer" || slot === "shoes")) s += it.rainproof ? 4 : -2;
+  return s;
+}
+function colorScore(picks){
+  const set = new Set();
+  for(const id of Object.values(picks)){
+    if(!id) continue;
+    const it = byId(id);
+    const c = it && COLOR_MAP[it.color];
+    if(c && !c.neutral) set.add(it.color);
+  }
+  return set.size > 2 ? -(set.size - 2) * 3.5 : (set.size === 2 ? -0.5 : 0);
+}
+const sigOf = picks => CAT_ORDER.map(s => picks[s] || "-").join("|");
+
+function generate(occ, w, exclude){
+  const T = effT(w), rain = isRain(w), tg = targets(T, rain);
+  const pool = {};
+  for(const s of CAT_ORDER) pool[s] = S.items.filter(it => it.cat === s && !isDirty(it) && (it.occ || []).includes(occ));
+  const notes = [];
+  const occLabel = (OCC.find(o => o.id === occ) || {}).label || occ;
+  const has = s => S.items.some(it => it.cat === s);
+  if(!pool.top.length && !pool.full.length) notes.push("Geen schone top voor " + occLabel.toLowerCase() + ". Kijk in je wasmand of voeg er een toe.");
+  if(!pool.bottom.length && !pool.full.length) notes.push("Geen schoon onderstuk voor " + occLabel.toLowerCase() + ".");
+  if(tg.mid.want === "yes" && !pool.mid.length && has("mid")) notes.push("Het is fris, maar er is geen schone trui voor deze gelegenheid.");
+  if(tg.outer.want === "yes" && !pool.outer.length && has("outer")) notes.push("Geen jas gemarkeerd voor " + occLabel.toLowerCase() + ".");
+
+  let best = null;
+  for(let i = 0; i < 150; i++){
+    const fullShare = pool.full.length / (pool.full.length + pool.top.length || 1);
+    const useFull = pool.full.length > 0 && (!pool.top.length || !pool.bottom.length || Math.random() < fullShare);
+    const slots = useFull ? ["full","mid","outer","shoes"] : ["top","mid","bottom","outer","shoes"];
+    const picks = {};
+    let score = 0;
+    for(const s of slots){
+      const t = tg[s];
+      if(t.want === "no"){ picks[s] = null; continue; }
+      if(t.want === "maybe" && Math.random() < 0.5){ picks[s] = null; continue; }
+      const opts = pool[s];
+      if(!opts.length){ picks[s] = null; if(t.want === "yes") score -= 6; continue; }
+      let bi = null, bs = -1e9;
+      for(const it of opts){
+        const sc = itemScore(it, s, t, rain) + Math.random() * 3;
+        if(sc > bs){ bs = sc; bi = it; }
+      }
+      picks[s] = bi.id;
+      score += bs;
+    }
+    score += colorScore(picks);
+    const sig = sigOf(picks);
+    if(exclude && exclude.includes(sig)) continue;
+    if(!best || score > best.score) best = { picks, score, sig };
+  }
+  return best ? { picks:best.picks, sig:best.sig, notes, found:true } : { picks:{}, sig:"", notes, found:false };
+}
+
+function ensurePlan(){
+  if(!S.kv.plan || S.kv.plan.date !== todayKey()) S.kv.plan = { date:todayKey(), byOcc:{}, override:null };
+  return S.kv.plan;
+}
+function outfitState(occ){
+  const log = S.wornToday[occ];
+  if(log) return { picks:log.picks, worn:true, notes:[] };
+  const plan = ensurePlan();
+  const w = effWeather(), T = effT(w), rain = isRain(w);
+  let p = plan.byOcc[occ];
+  const valid = p && Object.values(p.picks).some(Boolean) &&
+    Object.values(p.picks).every(id => !id || (byId(id) && !isDirty(byId(id)))) &&
+    Math.abs(p.T - T) < 3 && p.rain === rain;
+  if(!valid){
+    const g = generate(occ, w, []);
+    p = plan.byOcc[occ] = { picks:g.picks, shown:[g.sig], T, rain, notes:g.notes };
+    saveKV();
+  }
+  return { picks:p.picks, worn:false, notes:p.notes || [] };
+}
+function nextOutfit(){
+  const plan = ensurePlan();
+  const w = effWeather();
+  const p = plan.byOcc[S.occ];
+  let g = generate(S.occ, w, p ? p.shown : []);
+  if(!g.found || !Object.values(g.picks).some(Boolean)){
+    g = generate(S.occ, w, []);
+    toast("Alle combinaties gezien. We beginnen opnieuw.");
+  }
+  const T = effT(w), rain = isRain(w);
+  const shown = (p && g.found) ? p.shown.concat(g.sig) : [g.sig];
+  plan.byOcc[S.occ] = { picks:g.picks, shown, T, rain, notes:g.notes };
+  saveKV();
+  render();
+}
+
+/* ---------- Wearing & washing ---------- */
+async function wearOutfit(){
+  const occ = S.occ;
+  const st = outfitState(occ);
+  const ids = Object.values(st.picks).filter(Boolean);
+  if(!ids.length) return;
+  const date = todayKey(), prev = [];
+  for(const id of ids){
+    const it = byId(id);
+    if(!it) continue;
+    prev.push({ id, wears:it.wears || 0, lastWorn:it.lastWorn || null });
+    it.wears = (it.wears || 0) + 1;
+    it.lastWorn = date;
+    await idb.put("items", it);
+  }
+  const entry = { key:date + "|" + occ, date, occ, picks:{ ...st.picks }, prev };
+  await idb.put("log", entry);
+  S.wornToday[occ] = entry;
+  render();
+  toast("Gelogd. Fijne dag!");
+}
+async function undoWear(){
+  const e = S.wornToday[S.occ];
+  if(!e) return;
+  for(const p of e.prev){
+    const it = byId(p.id);
+    if(!it) continue;
+    it.wears = p.wears; it.lastWorn = p.lastWorn;
+    await idb.put("items", it);
+  }
+  await idb.del("log", e.key);
+  delete S.wornToday[S.occ];
+  render();
+  toast("Ongedaan gemaakt");
+}
+async function markWashed(ids){
+  for(const id of ids){
+    const it = byId(id);
+    if(!it) continue;
+    it.wears = 0; it.laundry = false;
+    await idb.put("items", it);
+  }
+  render();
+}
+async function toLaundry(id){
+  const it = byId(id);
+  if(!it) return;
+  it.laundry = true;
+  await idb.put("items", it);
+  render();
+}
+
+/* ---------- Rendering ---------- */
+function render(){
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + S.tab));
+  document.querySelectorAll(".tabbar [data-tab]").forEach(b => {
+    if(b.dataset.tab === S.tab) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current");
+  });
+  const dirty = S.items.filter(isDirty).length;
+  const badge = $("#laundry-badge");
+  badge.hidden = !dirty; badge.textContent = dirty;
+  if(S.tab === "today") renderToday();
+  if(S.tab === "closet") renderCloset();
+  if(S.tab === "laundry") renderLaundry();
+  if(S.tab === "settings") renderSettings();
+}
+
+function greeting(){
+  const h = new Date().getHours();
+  return h < 12 ? "Goeiemorgen." : h < 18 ? "Goeiemiddag." : "Goeienavond.";
+}
+function weatherHTML(){
+  if(!S.kv.loc && !(S.kv.plan && S.kv.plan.date === todayKey() && S.kv.plan.override)){
+    return `<section class="wx wx-setup">
+      <div><h3>Waar ben je vandaag?</h3><p class="muted">Met je locatie kiest Kast kleding op basis van het weer.</p></div>
+      <div class="row">
+        <button class="btn small primary" data-action="geo">Gebruik mijn locatie</button>
+        <button class="btn small secondary" data-action="goto-settings">Stad zoeken</button>
+        <button class="btn small secondary" data-action="wx-adjust">Zelf instellen</button>
+      </div></section>`;
+  }
+  const w = effWeather();
+  if(!w){
+    return `<section class="wx wx-setup"><div><h3>${S.wxLoading ? "Weer ophalen…" : "Weer niet beschikbaar"}</h3>
+      <p class="muted">${S.wxLoading ? "Even geduld." : "Geen verbinding met de weerdienst. Stel het weer zelf in of probeer opnieuw."}</p></div>
+      ${S.wxLoading ? "" : `<div class="row"><button class="btn small secondary" data-action="wx-retry">Opnieuw proberen</button><button class="btn small secondary" data-action="wx-adjust">Zelf instellen</button></div>`}</section>`;
+  }
+  const [ico, desc] = wxInfo(w.code);
+  const sub = w.manual
+    ? (w.rain >= 50 ? "Met regen" : "Droog")
+    : `Voelt als ${w.feels}°, ${w.rain}% kans op regen`;
+  const temp = w.manual ? w.feels : Math.round((w.tmin + w.tmax) / 2);
+  return `<section class="wx">
+    <div class="wx-big"><span class="wx-ico" aria-hidden="true">${ico}</span><span class="wx-temp">${temp}°</span></div>
+    <div><p class="wx-desc">${esc(desc)}${w.manual ? '<span class="wx-manual">handmatig</span>' : ""}</p><p class="wx-sub">${esc(sub)}</p></div>
+    <div class="wx-advice"><p>${esc(advice(w))}</p><button class="linkbtn" data-action="wx-adjust">Aanpassen</button></div>
+  </section>`;
+}
+function pieceHTML(slot, id, worn, hero){
+  const it = byId(id);
+  if(!it) return "";
+  const remaining = it.washEvery > 0 ? Math.max(0, it.washEvery - (it.wears || 0)) : null;
+  const tag = (!worn && remaining != null) ? `<span class="tag">nog ${remaining}×</span>` : "";
+  const label = esc(it.name || CATS[slot].label);
+  const inner = `<img src="${photoURL(it)}" alt="">${tag}<span class="slot">${label}</span>`;
+  return worn
+    ? `<div class="piece${hero ? " hero" : ""}" aria-label="${label}">${inner}</div>`
+    : `<button class="piece${hero ? " hero" : ""}" data-action="swap" data-slot="${slot}" aria-label="${label}, tik om te wisselen">${inner}</button>`;
+}
+function renderToday(){
+  const el = $("#view-today");
+  const dateStr = cap(new Date().toLocaleDateString("nl-BE", { weekday:"long", day:"numeric", month:"long" }));
+  let html = `<header class="today-head"><p class="date">${esc(dateStr)}</p><h1>${greeting()}<br>Dit trek je aan.</h1></header>`;
+  html += weatherHTML();
+  html += `<div class="occ" role="tablist" aria-label="Gelegenheid">${OCC.map(o =>
+    `<button role="tab" aria-selected="${o.id === S.occ}" data-action="occ" data-occ="${o.id}">${o.label}</button>`).join("")}</div>`;
+
+  if(!S.items.length){
+    html += `<div class="empty"><h2>Je kast is nog leeg</h2><p>Fotografeer een paar kledingstukken en Kast stelt elke ochtend een outfit voor.</p>
+      <button class="btn primary" data-action="add">Eerste kledingstuk toevoegen</button></div>`;
+    el.innerHTML = html;
+    return;
+  }
+  if(S.kv.loc && !effWeather() && S.wxLoading && !S.wornToday[S.occ]){
+    html += `<div class="empty"><p style="margin:0">Je outfit wordt gekozen zodra het weer binnen is.</p></div>`;
+    el.innerHTML = html;
+    return;
+  }
+  const st = outfitState(S.occ);
+  const p = st.picks;
+  const heroSlot = p.full ? "full" : "top";
+  const order = [heroSlot, "mid", "bottom", "outer", "shoes"].filter(s => !(heroSlot === "full" && s === "bottom"));
+  const pieces = order.filter(s => p[s]).map(s => pieceHTML(s, p[s], st.worn, s === heroSlot && Object.values(p).filter(Boolean).length > 2)).join("");
+
+  if(!pieces){
+    html += `<div class="empty"><h2>Niets schoons gevonden</h2><p>Er is geen schone kleding voor deze gelegenheid. Was iets of tag meer stukken voor ${esc(OCC.find(o => o.id === S.occ).label.toLowerCase())}.</p>
+      <button class="btn secondary" data-action="goto-laundry">Naar de wasmand</button></div>`;
+  }else{
+    html += `<div class="outfit${st.worn ? " worn" : ""}">${pieces}</div>`;
+  }
+  if(st.notes.length) html += `<ul class="notes">${st.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>`;
+  if(pieces){
+    if(st.worn){
+      html += `<div class="worn-banner"><div><strong>Vandaag gedragen</strong><br><small>Deze stukken tellen mee voor de was.</small></div>
+        <button class="btn small secondary" data-action="undo-wear">Ongedaan maken</button></div>`;
+    }else{
+      html += `<div class="actions"><button class="btn secondary" data-action="next">Andere outfit</button>
+        <button class="btn primary" data-action="wear">Ik draag dit</button></div>
+        <p class="muted" style="font-size:.8125rem;margin-top:10px;text-align:center">Tik op een stuk om alleen dat te wisselen.</p>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+function statusText(it){
+  if(isDirty(it)) return "In de was";
+  if(it.washEvery > 0) return `Nog ${it.washEvery - (it.wears || 0)}× tot de was`;
+  return (it.occ || []).map(o => (OCC.find(x => x.id === o) || {}).label).filter(Boolean).join(", ");
+}
+function renderCloset(){
+  const el = $("#view-closet");
+  const f = S.closetFilter;
+  const list = S.items
+    .filter(it => f === "all" || it.cat === f)
+    .sort((a,b) => CAT_ORDER.indexOf(a.cat) - CAT_ORDER.indexOf(b.cat) || (b.added || 0) - (a.added || 0));
+  let html = `<div class="sec-head"><div><h1>Kast</h1><p class="muted">${S.items.length} ${S.items.length === 1 ? "stuk" : "stukken"}</p></div>
+    <button class="btn small primary" data-action="add">Toevoegen</button></div>`;
+  if(hasAI()) html += `<button class="btn secondary" style="width:100%;margin-bottom:14px" data-action="bulk">Meerdere foto's toevoegen</button>`;
+  const unchecked = S.items.filter(i => i.checked === false).length;
+  if(unchecked) html += `<p class="ai-note"><span><b>${unchecked} automatisch toegevoegd.</b> Tik erop om te controleren; gemarkeerd met een geel label.</span></p>`;
+  html += `<div class="filters" role="group" aria-label="Filter">${[["all","Alles"], ...CAT_ORDER.map(c => [c, CATS[c].label])].map(([k,l]) =>
+    `<button aria-pressed="${f === k}" data-action="filter" data-f="${k}">${l}</button>`).join("")}</div>`;
+  if(!list.length){
+    html += `<div class="empty"><h2>${S.items.length ? "Niets in deze categorie" : "Nog niets toegevoegd"}</h2>
+      <p>Tik op Toevoegen en fotografeer een kledingstuk tegen een effen achtergrond.</p>
+      <button class="btn primary" data-action="add">Kledingstuk toevoegen</button></div>`;
+  }else{
+    html += `<div class="grid">${list.map(it => `
+      <button class="item${isDirty(it) ? " dirty" : ""}" data-action="edit" data-id="${it.id}">
+        <span class="ph"><img src="${photoURL(it)}" alt="" loading="lazy">${it.checked === false ? '<span class="tag">nakijken</span>' : ""}</span>
+        <span class="nm">${esc(it.name)}</span><span class="st">${esc(statusText(it))}</span>
+      </button>`).join("")}</div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderLaundry(){
+  const el = $("#view-laundry");
+  const dirty = S.items.filter(isDirty);
+  let html = `<div class="sec-head"><div><h1>Wasmand</h1><p class="muted">${dirty.length ? dirty.length + " " + (dirty.length === 1 ? "stuk wacht" : "stukken wachten") + " op de was" : "Alles is schoon"}</p></div>
+    ${dirty.length ? `<button class="btn small primary" data-action="wash-all">Alles gewassen</button>` : ""}</div>`;
+  if(!dirty.length){
+    html += `<div class="empty"><h2>Lege wasmand</h2><p>Kleding die zijn aantal draagbeurten heeft bereikt, komt hier terecht en verdwijnt uit je suggesties tot je ze als gewassen markeert.</p></div>`;
+  }else{
+    html += `<div class="list">${dirty.map(it => `
+      <div class="row-item">
+        <span class="thumb"><img src="${photoURL(it)}" alt=""></span>
+        <div><div class="nm">${esc(it.name)}</div><div class="st">${it.lastWorn ? "Laatst gedragen " + esc(relDay(it.lastWorn)) : "Handmatig in de was gelegd"}</div></div>
+        <button class="btn small secondary" data-action="wash" data-id="${it.id}">Gewassen</button>
+      </div>`).join("")}</div>`;
+  }
+  el.innerHTML = html;
+}
+function relDay(key){
+  const d = daysSince(key);
+  if(d === 0) return "vandaag";
+  if(d === 1) return "gisteren";
+  return d + " dagen geleden";
+}
+
+function renderSettings(){
+  const el = $("#view-settings");
+  const loc = S.kv.loc;
+  const standalone = window.navigator.standalone || matchMedia("(display-mode: standalone)").matches;
+  let html = `<div class="sec-head"><h1>Instellingen</h1></div>`;
+  html += `<div class="group"><h3>Locatie</h3>
+    <p class="muted">${loc ? "Weer voor " + esc(loc.name) : "Nog geen locatie ingesteld"}</p>
+    <div class="row"><button class="btn small secondary" data-action="geo">Gebruik mijn locatie</button></div>
+    <div class="search-row"><input class="input" id="city-q" type="search" placeholder="Zoek een stad" autocomplete="off" enterkeyhint="search">
+    <button class="btn small primary" data-action="city-search">Zoek</button></div>
+    <div class="results" id="city-results"></div></div>`;
+  const feel = S.kv.feel || "normaal";
+  html += `<div class="group"><h3>Hoe ervaar je temperatuur?</h3>
+    <p class="muted">Kast past de warmte van je outfit hierop aan.</p>
+    <div class="seg">${[["koud","Snel koud"],["normaal","Normaal"],["warm","Snel warm"]].map(([k,l]) =>
+      `<button aria-pressed="${feel === k}" data-action="feel" data-v="${k}">${l}</button>`).join("")}</div></div>`;
+  html += `<div class="group"><h3>Automatisch herkennen</h3>
+    <p class="muted">${hasAI() ? "Aan. Nieuwe foto's worden herkend door Claude: soort, kleur, warmte en gelegenheid." : "Laat Claude bij elke foto herkennen wat het is, welke kleur en hoe warm. Hiervoor heb je een eigen API-sleutel van de Claude Console nodig."}</p>
+    ${hasAI()
+      ? `<div class="row"><button class="btn small danger" data-action="ai-remove">Sleutel verwijderen</button></div>`
+      : `<div class="search-row"><input class="input" id="api-key" type="password" placeholder="sk-ant-…" autocomplete="off" autocapitalize="off" spellcheck="false">
+         <button class="btn small primary" data-action="ai-save">Bewaar</button></div>
+         <small style="display:block;margin-top:8px">De sleutel blijft op dit toestel en gaat alleen naar Anthropic.</small>`}
+  </div>`;
+  const wd = S.kv.weekdayOcc || "werk", we = S.kv.weekendOcc || "casual";
+  html += `<div class="group"><h3>Standaard gelegenheid</h3>
+    <p class="muted" style="margin-top:6px">Op weekdagen</p>
+    <div class="seg">${OCC.map(o => `<button aria-pressed="${wd === o.id}" data-action="def-occ" data-k="weekdayOcc" data-v="${o.id}">${o.label}</button>`).join("")}</div>
+    <p class="muted" style="margin-top:12px">In het weekend</p>
+    <div class="seg">${OCC.map(o => `<button aria-pressed="${we === o.id}" data-action="def-occ" data-k="weekendOcc" data-v="${o.id}">${o.label}</button>`).join("")}</div></div>`;
+  html += `<div class="group"><h3>Back-up</h3>
+    <p class="muted">Je kast staat alleen op dit toestel. Maak af en toe een back-up, bijvoorbeeld naar iCloud Drive.</p>
+    <div class="row"><button class="btn small secondary" data-action="export">Back-up maken</button>
+    <button class="btn small secondary" data-action="import">Back-up terugzetten</button></div></div>`;
+  if(!standalone){
+    html += `<div class="group"><h3>Op je beginscherm zetten</h3>
+      <p class="muted">Open deze pagina in Safari, tik op het deelicoon en kies ‘Zet op beginscherm’. Kast opent dan als een app en je gegevens blijven bewaard.</p></div>`;
+  }
+  html += `<div class="group"><h3>Alles wissen</h3><p class="muted">Verwijdert al je kleding, foto's en instellingen van dit toestel.</p>
+    <div class="row"><button class="btn small danger" data-action="reset">Alles wissen</button></div></div>`;
+  html += `<p class="muted" style="font-size:.75rem;text-align:center;margin-top:8px">Weerdata: Open-Meteo.com</p>`;
+  el.innerHTML = html;
+}
+
+/* ---------- Sheets ---------- */
+let sheetToken = 0;
+function openSheet(html){
+  const root = $("#sheet");
+  sheetToken++;
+  root.innerHTML = `<div class="scrim" data-action="close-sheet"></div><div class="panel" role="dialog" aria-modal="true"><div class="grabber"></div>${html}</div>`;
+  root.hidden = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add("open")));
+}
+function closeSheet(){
+  const root = $("#sheet");
+  const my = ++sheetToken;
+  root.classList.remove("open");
+  setTimeout(() => { if(my === sheetToken){ root.hidden = true; root.innerHTML = ""; } }, 260);
+  if(F && F._url){ URL.revokeObjectURL(F._url); }
+  F = null;
+}
+
+/* Swap one piece */
+function openSwap(slot){
+  const occ = S.occ;
+  const items = S.items.filter(i => i.cat === slot);
+  const clean = items.filter(i => !isDirty(i)).sort((a,b) => {
+    const am = (a.occ || []).includes(occ) ? 0 : 1, bm = (b.occ || []).includes(occ) ? 0 : 1;
+    return am - bm || daysSince(b.lastWorn) - daysSince(a.lastWorn);
+  });
+  const dirty = items.filter(isDirty);
+  const cur = (S.kv.plan && S.kv.plan.byOcc[occ] || {}).picks || {};
+  const tile = (it, off) => `<button class="item${off ? " off" : ""}" data-action="pick" data-slot="${slot}" data-id="${it.id}" ${off ? "disabled" : ""}>
+    <span class="ph"><img src="${photoURL(it)}" alt="">${cur[slot] === it.id ? '<span class="tag">nu</span>' : ""}</span>
+    <span class="nm">${esc(it.name)}</span><span class="st">${(it.occ || []).includes(occ) ? esc(relLast(it)) : "Andere gelegenheid"}</span></button>`;
+  let html = `<div class="sheet-head"><h2>Kies ${esc(CATS[slot].label.toLowerCase())}</h2><button class="linkbtn" data-action="close-sheet">Sluit</button></div>`;
+  html += `<div class="swap-grid">`;
+  if(slot === "mid" || slot === "outer") html += `<button class="none-opt" data-action="pick" data-slot="${slot}" data-id="">Zonder ${esc(CATS[slot].label.toLowerCase())}</button>`;
+  html += clean.map(it => tile(it, false)).join("") + `</div>`;
+  if(dirty.length) html += `<p class="sub-lbl">In de was</p><div class="swap-grid">${dirty.map(it => tile(it, true)).join("")}</div>`;
+  openSheet(html);
+}
+function relLast(it){ return it.lastWorn ? "Gedragen " + relDay(it.lastWorn) : "Nog niet gedragen"; }
+function pickSwap(slot, id){
+  const plan = ensurePlan();
+  const p = plan.byOcc[S.occ];
+  if(!p) return;
+  p.picks[slot] = id || null;
+  p.shown.push(sigOf(p.picks));
+  saveKV();
+  closeSheet();
+  render();
+}
+
+/* Weather override */
+function openWxAdjust(){
+  const plan = ensurePlan();
+  const o = plan.override || {};
+  const opts = [["Koud",2],["Fris",9],["Mild",15],["Warm",21],["Heet",27]];
+  let html = `<div class="sheet-head"><h2>Weer van vandaag</h2><button class="linkbtn" data-action="close-sheet">Sluit</button></div>
+    <p class="muted" style="margin-bottom:12px">Handig als je geen verbinding hebt of ergens anders naartoe gaat.</p>
+    <div class="field"><span class="lbl">Temperatuur</span><div class="chips">${opts.map(([l,v]) =>
+      `<button aria-pressed="${o.feels === v}" data-action="wx-set" data-v="${v}">${l}</button>`).join("")}</div></div>
+    <div class="field"><label class="switch">Regen verwacht<input type="checkbox" id="wx-rain" ${o.rain ? "checked" : ""}></label></div>`;
+  if(plan.override || S.kv.loc) html += `<div class="actions"><button class="btn secondary" data-action="wx-auto">${S.kv.loc ? "Automatisch weer gebruiken" : "Handmatig weer wissen"}</button></div>`;
+  openSheet(html);
+}
+
+/* Add / edit item */
+let F = null;
+function openEdit(id){
+  const it = id ? byId(id) : null;
+  if(it){
+    F = { id:it.id, photo:it.photo, name:it.name || "", cat:it.cat, color:it.color, warmth:it.warmth || 2, occ:[...(it.occ || [])],
+          rainproof:!!it.rainproof, washEvery:it.washEvery ?? CATS[it.cat].wash, washTouched:true, isNew:false, _url:null };
+  }else{
+    const cat = S.closetFilter !== "all" ? S.closetFilter : "top";
+    F = { id:null, photo:null, name:"", cat, color:"zwart", warmth:cat === "bottom" ? 2 : 1, occ:[S.occ],
+          rainproof:false, washEvery:CATS[cat].wash, washTouched:false, isNew:true, _url:null };
+  }
+  openSheet(`<div id="edit"></div>`);
+  renderEdit();
+}
+function formPhotoURL(){
+  if(!F.photo) return "";
+  if(!F.isNew && F.id && !F._url && byId(F.id) && byId(F.id).photo === F.photo) return photoURL(byId(F.id));
+  if(!F._url) F._url = URL.createObjectURL(F.photo);
+  return F._url;
+}
+function renderEdit(){
+  const box = $("#edit");
+  if(!box || !F) return;
+  const c = CATS[F.cat];
+  const it = F.id ? byId(F.id) : null;
+  const pURL = formPhotoURL();
+  if(F.analyzing){
+    box.innerHTML = `<div class="sheet-head"><h2>Nieuw kledingstuk</h2><button class="linkbtn" data-action="close-sheet">Sluit</button></div>
+      <div class="photo-pick"><img src="${pURL}" alt=""><span class="analyzing"><span class="spinner"></span>Herkennen…</span></div>
+      <p class="muted" style="text-align:center">Kast bekijkt wat het is, welke kleur en hoe warm.</p>`;
+    return;
+  }
+  let html = `<div class="sheet-head"><h2>${F.isNew ? "Nieuw kledingstuk" : "Kledingstuk"}</h2><button class="linkbtn" data-action="close-sheet">Sluit</button></div>
+    <label class="photo-pick">
+      ${pURL ? `<img src="${pURL}" alt=""><span class="change">Andere foto</span>` : `<span class="ph-cta"><strong>Foto toevoegen</strong>Neem een foto of kies uit je bibliotheek</span>`}
+      <input type="file" id="f-photo" accept="image/*">
+      ${F.analyzing ? `<span class="analyzing"><span class="spinner"></span>Herkennen…</span>` : ""}
+    </label>
+    ${F.aiDone ? `<p class="ai-note"><span><b>Automatisch herkend.</b> Controleer vooral de warmte en pas aan waar nodig.</span></p>` : ""}
+    ${!hasAI() && F.isNew && !F.photo ? `<p class="ai-note"><span>Wil je dat Kast zelf herkent wat het is? Stel automatisch herkennen in bij Instellingen.</span></p>` : ""}
+    <div class="field"><label class="lbl" for="f-name">Naam</label><input class="input" id="f-name" style="width:100%" value="${esc(F.name)}" placeholder="Bijv. witte oxford" autocomplete="off"></div>
+    <div class="field"><span class="lbl">Soort</span><div class="chips">${CAT_ORDER.map(k =>
+      `<button aria-pressed="${F.cat === k}" data-action="f-cat" data-v="${k}">${CATS[k].label}</button>`).join("")}</div>
+      ${c.hint ? `<small>${esc(c.hint)}</small>` : ""}</div>
+    <div class="field"><span class="lbl">Kleur</span><div class="swatches">${COLORS.map(([n,css]) =>
+      `<button aria-pressed="${F.color === n}" aria-label="${n}" title="${n}" data-action="f-color" data-v="${n}" style="background:${css}"></button>`).join("")}</div>
+      <small>Gekozen: ${esc(F.color)}</small></div>
+    <div class="field"><span class="lbl">Warmte</span><div class="seg" style="margin-top:0">${[1,2,3].map(v =>
+      `<button aria-pressed="${F.warmth === v}" data-action="f-warmth" data-v="${v}">${esc(c.warmth[v-1])}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Wanneer draag je dit?</span><div class="chips">${OCC.map(o =>
+      `<button aria-pressed="${F.occ.includes(o.id)}" data-action="f-occ" data-v="${o.id}">${o.label}</button>`).join("")}</div></div>`;
+  if(F.cat === "outer" || F.cat === "shoes"){
+    html += `<div class="field"><label class="switch">Geschikt bij regen<input type="checkbox" id="f-rain" ${F.rainproof ? "checked" : ""}></label></div>`;
+  }
+  html += `<div class="field"><span class="lbl">Aantal keer dragen tot de was</span>
+      <div class="stepper"><button data-action="f-step" data-v="-1" aria-label="Minder">−</button><output>${F.washEvery === 0 ? "Nooit" : F.washEvery + "×"}</output><button data-action="f-step" data-v="1" aria-label="Meer">+</button></div>
+      <br><small>${F.washEvery === 1 ? "Na één keer dragen gaat dit naar de wasmand." : F.washEvery === 0 ? "Telt niet mee voor de was, zoals een jas of schoenen." : "Na " + F.washEvery + " keer dragen gaat dit naar de wasmand."}</small></div>`;
+  html += `<div class="actions"><button class="btn primary" data-action="f-save">Opslaan</button></div>`;
+  if(F.isNew) html += `<div class="actions" style="margin-top:8px"><button class="btn secondary" data-action="f-save-more">Opslaan en nog een toevoegen</button></div>`;
+  if(it){
+    html += `<div class="actions" style="margin-top:8px">${isDirty(it)
+      ? `<button class="btn secondary" data-action="f-washed">Gewassen</button>`
+      : `<button class="btn secondary" data-action="f-laundry">In de wasmand</button>`}
+      <button class="btn danger" data-action="f-delete">Verwijderen</button></div>`;
+  }
+  box.innerHTML = html;
+}
+async function compressImage(file){
+  const url = URL.createObjectURL(file);
+  try{
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("Kon foto niet lezen")); i.src = url; });
+    const max = 900;
+    const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.round(img.naturalWidth * scale), h = Math.round(img.naturalHeight * scale);
+    const cv = document.createElement("canvas");
+    cv.width = w; cv.height = h;
+    cv.getContext("2d").drawImage(img, 0, 0, w, h);
+    return await new Promise(res => cv.toBlob(b => res(b || file), "image/jpeg", 0.82));
+  }finally{
+    URL.revokeObjectURL(url);
+  }
+}
+async function saveItem(more){
+  if(!F) return;
+  if(!F.photo){ toast("Voeg eerst een foto toe"); return; }
+  if(!F.occ.length){ toast("Kies minstens één gelegenheid"); return; }
+  const prev = F.id ? byId(F.id) : null;
+  const it = {
+    id: F.id || uid(), photo:F.photo,
+    name: F.name.trim() || CATS[F.cat].noun + " (" + F.color + ")",
+    cat:F.cat, color:F.color, warmth:F.warmth, occ:F.occ,
+    rainproof:(F.cat === "outer" || F.cat === "shoes") && F.rainproof,
+    washEvery:F.washEvery,
+    wears: prev ? prev.wears || 0 : 0,
+    lastWorn: prev ? prev.lastWorn || null : null,
+    laundry: prev ? !!prev.laundry : false,
+    added: prev ? prev.added : Date.now(),
+    checked: true
+  };
+  try{
+    await idb.put("items", it);
+  }catch(e){
+    toast("Opslaan mislukt: onvoldoende opslagruimte?");
+    return;
+  }
+  if(prev && prev.photo !== it.photo) dropURL(it.id);
+  const i = S.items.findIndex(x => x.id === it.id);
+  if(i >= 0) S.items[i] = it; else S.items.push(it);
+  if(more){
+    const keep = { cat:F.cat, occ:[...F.occ], washEvery:F.washEvery, warmth:F.warmth };
+    if(F._url) URL.revokeObjectURL(F._url);
+    F = { id:null, photo:null, name:"", cat:keep.cat, color:"zwart", warmth:keep.warmth, occ:keep.occ, rainproof:false, washEvery:keep.washEvery, washTouched:true, isNew:true, _url:null };
+    renderEdit();
+    $("#sheet .panel").scrollTop = 0;
+    toast("Toegevoegd. Volgende!");
+  }else{
+    closeSheet();
+    toast(prev ? "Opgeslagen" : "Toegevoegd aan je kast");
+  }
+  render();
+}
+async function deleteItem(){
+  if(!F || !F.id) return;
+  if(!confirm("Dit kledingstuk verwijderen?")) return;
+  await idb.del("items", F.id);
+  dropURL(F.id);
+  S.items = S.items.filter(x => x.id !== F.id);
+  closeSheet();
+  render();
+  toast("Verwijderd");
+}
+
+/* ---------- Automatic recognition (Claude API) ---------- */
+const AI_PROMPT = `Je bekijkt een foto van één kledingstuk uit iemands kleerkast. Bepaal wat het is.
+Antwoord ALLEEN met één JSON-object, zonder uitleg en zonder markdown, met precies deze velden:
+{"cat":"top|mid|bottom|full|outer|shoes|other","name":"...","color":"...","warmth":1,"occ":["..."],"rainproof":false}
+
+cat:
+- top: t-shirt, polo, hemd, blouse, top, longsleeve, sportshirt
+- mid: trui, sweater, hoodie, sweatshirt, cardigan, gilet, fleece, coltrui (iets dat je over een top draagt, geen jas)
+- bottom: broek, jeans, chino, joggingbroek, short, rok, legging
+- full: jurk, overall, jumpsuit
+- outer: jas, blazer, parka, regenjas, donsjas, windjack, bodywarmer
+- shoes: alle schoenen, sneakers, laarzen, sandalen
+- other: geen kledingstuk of niet te herkennen
+
+warmth (1, 2 of 3), beoordeeld op stof, dikte, breisel en voering:
+- top: 1 = korte mouw of dunne stof; 2 = lange mouw; 3 = dik, bijvoorbeeld flanel of thermo
+- mid: 1 = dun: fijn gebreid, merino, dunne sweater of cardigan; 2 = gewone sweater of hoodie; 3 = warm: grof of dik gebreid, wol, kabeltrui, gevoerd of teddy-fleece
+- bottom: 1 = short of rok; 2 = gewone lange broek of jeans; 3 = dik, gevoerd of corduroy
+- full: 1 = zomers; 2 = tussenseizoen; 3 = winters
+- outer: 1 = licht: regenjas, windjack, blazer, dunne jas; 2 = tussenseizoen; 3 = winterjas, donsjas, parka met voering
+- shoes: 1 = open of zomers; 2 = gewone schoenen of sneakers; 3 = laarzen of gevoerd
+
+name: korte Nederlandse naam van 1 tot 3 woorden, bijvoorbeeld "Witte t-shirt", "Dikke grijze trui", "Donkere jeans".
+color: de hoofdkleur, kies exact één van: COLORLIST. Gebruik "print" bij een opvallend patroon of meerdere kleuren.
+occ: één of meer van "werk", "casual", "sport", "uitgaan" waarvoor dit stuk geschikt is. Sportkleding alleen "sport".
+rainproof: true alleen voor jassen of schoenen die duidelijk waterafstotend zijn (regenjas, parka, rubberen of lederen laarzen).`;
+
+const hasAI = () => !!(S.kv.apiKey && S.kv.apiKey.trim());
+async function analyzePhoto(blob){
+  const data = (await blobToDataURL(blob)).split(",")[1];
+  let r;
+  try{
+    r = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{
+        "content-type":"application/json",
+        "x-api-key":S.kv.apiKey.trim(),
+        "anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"
+      },
+      body:JSON.stringify({
+        model:AI_MODEL,
+        max_tokens:300,
+        messages:[{ role:"user", content:[
+          { type:"image", source:{ type:"base64", media_type:blob.type || "image/jpeg", data } },
+          { type:"text", text:AI_PROMPT.replace("COLORLIST", COLORS.map(c => c[0]).join(", ")) }
+        ]}]
+      })
+    });
+  }catch(e){
+    throw new Error("Herkennen lukt niet zonder internetverbinding");
+  }
+  if(r.status === 401 || r.status === 403) throw new Error("Je API-sleutel klopt niet. Controleer hem in Instellingen.");
+  if(r.status === 429) throw new Error("Even te veel aanvragen. Probeer zo opnieuw.");
+  if(r.status === 400){
+    let msg = "";
+    try{ msg = (await r.json()).error.message || ""; }catch(_){}
+    if(/credit|balance/i.test(msg)) throw new Error("Je API-tegoed is op. Vul het aan in de Claude Console.");
+    throw new Error("Herkennen mislukt" + (msg ? ": " + msg : ""));
+  }
+  if(!r.ok) throw new Error("Herkennen mislukt (fout " + r.status + ")");
+  const j = await r.json();
+  const text = (j.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+  const m = text.match(/\{[\s\S]*\}/);
+  if(!m) throw new Error("Geen bruikbaar antwoord ontvangen");
+  const o = JSON.parse(m[0]);
+  if(!CATS[o.cat]) return { cat:"other" };
+  return {
+    cat:o.cat,
+    name:String(o.name || "").slice(0, 40),
+    color:COLOR_MAP[o.color] ? o.color : null,
+    warmth:[1,2,3].includes(Number(o.warmth)) ? Number(o.warmth) : 2,
+    occ:Array.isArray(o.occ) ? o.occ.filter(x => OCC.some(oc => oc.id === x)) : [],
+    rainproof:!!o.rainproof
+  };
+}
+function applyAI(res){
+  F.cat = res.cat;
+  if(res.name) F.name = res.name;
+  if(res.color) F.color = res.color;
+  F.warmth = res.warmth;
+  if(res.occ.length) F.occ = res.occ;
+  F.rainproof = res.rainproof;
+  if(!F.washTouched) F.washEvery = CATS[res.cat].wash;
+  F.aiDone = true;
+}
+async function bulkAdd(files){
+  const list = Array.from(files);
+  let ok = 0, fail = 0, lastErr = "";
+  for(let i = 0; i < list.length; i++){
+    toast(`Herkennen ${i + 1} van ${list.length}…`);
+    try{
+      const blob = await compressImage(list[i]);
+      const res = await analyzePhoto(blob);
+      if(res.cat === "other"){ fail++; lastErr = "Niet elk stuk werd herkend als kledingstuk"; continue; }
+      const it = {
+        id:uid(), photo:blob, name:res.name || CATS[res.cat].noun, cat:res.cat, color:res.color || "zwart",
+        warmth:res.warmth, occ:res.occ.length ? res.occ : ["casual"], rainproof:res.rainproof,
+        washEvery:CATS[res.cat].wash, wears:0, lastWorn:null, laundry:false, added:Date.now(), checked:false
+      };
+      await idb.put("items", it);
+      S.items.push(it);
+      ok++;
+      render();
+    }catch(e){
+      fail++; lastErr = e.message;
+      if(/sleutel|tegoed|internet/.test(e.message)) break;
+    }
+  }
+  render();
+  toast(fail ? `${ok} toegevoegd, ${fail} mislukt. ${lastErr}` : `${ok} stukken toegevoegd. Controleer ze in je kast.`);
+}
+
+/* ---------- Location ---------- */
+function useGeo(){
+  if(!navigator.geolocation){ toast("Locatie is niet beschikbaar op dit toestel"); return; }
+  toast("Locatie opvragen…");
+  navigator.geolocation.getCurrentPosition(async pos => {
+    S.kv.loc = { lat:+pos.coords.latitude.toFixed(3), lon:+pos.coords.longitude.toFixed(3), name:"je huidige locatie" };
+    await saveKV();
+    render();
+    await loadWeather(true);
+    render();
+    toast("Locatie ingesteld");
+  }, err => {
+    toast(err.code === 1 ? "Geen toestemming. Zoek je stad in Instellingen." : "Locatie niet gevonden. Zoek je stad in Instellingen.");
+  }, { enableHighAccuracy:false, timeout:12000, maximumAge:3600e3 });
+}
+async function citySearch(){
+  const q = ($("#city-q") || {}).value?.trim();
+  const box = $("#city-results");
+  if(!q || !box) return;
+  box.innerHTML = `<p class="muted" style="padding:8px 0">Zoeken…</p>`;
+  try{
+    const r = await fetch("https://geocoding-api.open-meteo.com/v1/search?count=6&language=nl&name=" + encodeURIComponent(q));
+    const j = await r.json();
+    const res = j.results || [];
+    box.innerHTML = res.length ? res.map(x => {
+      const name = [x.name, x.admin1, x.country].filter(Boolean).join(", ");
+      return `<button data-action="city-pick" data-lat="${x.latitude}" data-lon="${x.longitude}" data-name="${esc(x.name)}">${esc(name)}</button>`;
+    }).join("") : `<p class="muted" style="padding:8px 0">Geen resultaten voor ‘${esc(q)}’.</p>`;
+  }catch(e){
+    box.innerHTML = `<p class="muted" style="padding:8px 0">Zoeken lukt niet zonder internetverbinding.</p>`;
+  }
+}
+
+/* ---------- Backup ---------- */
+const blobToDataURL = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+const dataURLToBlob = async d => (await fetch(d)).blob();
+async function exportData(){
+  toast("Back-up maken…");
+  const items = await Promise.all(S.items.map(async it => ({ ...it, photo: it.photo ? await blobToDataURL(it.photo) : null })));
+  const log = await idb.all("log");
+  const settings = { ...S.kv }; delete settings.plan; delete settings.wx; delete settings.apiKey;
+  const data = { app:"kast", version:1, exported:new Date().toISOString(), items, settings, log };
+  const blob = new Blob([JSON.stringify(data)], { type:"application/json" });
+  const name = "kast-backup-" + todayKey() + ".json";
+  try{
+    const file = new File([blob], name, { type:"application/json" });
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      await navigator.share({ files:[file], title:"Kast back-up" });
+      return;
+    }
+  }catch(e){
+    if(e && e.name === "AbortError") return;
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+}
+async function importData(file){
+  try{
+    const data = JSON.parse(await file.text());
+    if(data.app !== "kast" || !Array.isArray(data.items)) throw new Error("Geen Kast-back-up");
+    if(!confirm(`Je huidige kast (${S.items.length} stukken) vervangen door de back-up (${data.items.length} stukken)?`)) return;
+    await idb.clear("items"); await idb.clear("log");
+    photoURLs.forEach(u => URL.revokeObjectURL(u)); photoURLs.clear();
+    const items = [];
+    for(const it of data.items){
+      const copy = { ...it, photo: it.photo ? await dataURLToBlob(it.photo) : null };
+      await idb.put("items", copy);
+      items.push(copy);
+    }
+    for(const e of (data.log || [])) await idb.put("log", e);
+    S.items = items;
+    S.kv = { ...(data.settings || {}), apiKey:S.kv.apiKey };
+    await saveKV();
+    await loadWornToday();
+    S.occ = defaultOcc();
+    await loadWeather(true);
+    render();
+    toast("Back-up teruggezet");
+  }catch(e){
+    toast("Dit bestand is geen geldige Kast-back-up");
+  }
+}
+async function resetAll(){
+  if(!confirm("Alles wissen? Dit kan niet ongedaan worden gemaakt.")) return;
+  await idb.clear("items"); await idb.clear("log"); await idb.clear("kv");
+  photoURLs.forEach(u => URL.revokeObjectURL(u)); photoURLs.clear();
+  S.items = []; S.kv = {}; S.weather = null; S.wornToday = {};
+  S.tab = "today";
+  render();
+  toast("Alles gewist");
+}
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
+}
+
+/* ---------- Events ---------- */
+document.addEventListener("click", async e => {
+  const tab = e.target.closest("[data-tab]");
+  if(tab){ S.tab = tab.dataset.tab; render(); window.scrollTo(0,0); return; }
+  const el = e.target.closest("[data-action]");
+  if(!el) return;
+  const a = el.dataset.action, v = el.dataset.v;
+  switch(a){
+    case "occ": S.occ = el.dataset.occ; render(); break;
+    case "next": nextOutfit(); break;
+    case "wear": wearOutfit(); break;
+    case "undo-wear": undoWear(); break;
+    case "swap": openSwap(el.dataset.slot); break;
+    case "pick": pickSwap(el.dataset.slot, el.dataset.id); break;
+    case "add": openEdit(null); break;
+    case "bulk": $("#bulk-file").click(); break;
+    case "ai-save": {
+      const k = ($("#api-key") || {}).value?.trim();
+      if(!k || !k.startsWith("sk-ant-")){ toast("Dat lijkt geen geldige sleutel (begint met sk-ant-)"); break; }
+      S.kv.apiKey = k; await saveKV(); render(); toast("Automatisch herkennen staat aan"); break;
+    }
+    case "ai-remove":
+      if(!confirm("API-sleutel van dit toestel verwijderen?")) break;
+      delete S.kv.apiKey; await saveKV(); render(); toast("Sleutel verwijderd"); break;
+    case "edit": openEdit(el.dataset.id); break;
+    case "filter": S.closetFilter = el.dataset.f; render(); break;
+    case "wash": markWashed([el.dataset.id]); toast("Terug in je kast"); break;
+    case "wash-all": markWashed(S.items.filter(isDirty).map(i => i.id)); toast("Alles terug in je kast"); break;
+    case "goto-settings": S.tab = "settings"; render(); setTimeout(() => $("#city-q") && $("#city-q").focus(), 50); break;
+    case "goto-laundry": S.tab = "laundry"; render(); break;
+    case "close-sheet": closeSheet(); break;
+    case "geo": useGeo(); break;
+    case "city-search": citySearch(); break;
+    case "city-pick":
+      S.kv.loc = { lat:+(+el.dataset.lat).toFixed(3), lon:+(+el.dataset.lon).toFixed(3), name:el.dataset.name };
+      await saveKV(); render(); await loadWeather(true); render(); toast("Locatie ingesteld"); break;
+    case "feel": S.kv.feel = v; await saveKV(); render(); break;
+    case "def-occ": S.kv[el.dataset.k] = v; await saveKV(); render(); break;
+    case "export": exportData(); break;
+    case "import": $("#import-file").click(); break;
+    case "reset": resetAll(); break;
+    case "wx-adjust": openWxAdjust(); break;
+    case "wx-retry": loadWeather(true).then(render); render(); break;
+    case "wx-set": {
+      const plan = ensurePlan();
+      plan.override = { feels:Number(v), rain:!!($("#wx-rain") && $("#wx-rain").checked) };
+      await saveKV(); closeSheet(); render(); break;
+    }
+    case "wx-auto": {
+      const plan = ensurePlan(); plan.override = null; await saveKV(); closeSheet(); render(); break;
+    }
+    /* edit form */
+    case "f-cat":
+      F.cat = v;
+      if(!F.washTouched) F.washEvery = CATS[v].wash;
+      renderEdit(); break;
+    case "f-color": F.color = v; renderEdit(); break;
+    case "f-warmth": F.warmth = Number(v); renderEdit(); break;
+    case "f-occ":
+      F.occ = F.occ.includes(v) ? F.occ.filter(x => x !== v) : F.occ.concat(v);
+      renderEdit(); break;
+    case "f-step":
+      F.washEvery = Math.max(0, Math.min(30, F.washEvery + Number(v)));
+      F.washTouched = true; renderEdit(); break;
+    case "f-save": saveItem(false); break;
+    case "f-save-more": saveItem(true); break;
+    case "f-delete": deleteItem(); break;
+    case "f-laundry": { const id = F.id; closeSheet(); await toLaundry(id); toast("In de wasmand gelegd"); break; }
+    case "f-washed": { const id = F.id; closeSheet(); await markWashed([id]); toast("Terug in je kast"); break; }
+  }
+});
+document.addEventListener("input", e => {
+  if(e.target.id === "f-name" && F) F.name = e.target.value;
+});
+document.addEventListener("change", async e => {
+  const t = e.target;
+  if(t.id === "f-photo" && F && t.files && t.files[0]){
+    toast("Foto verwerken…");
+    try{
+      const blob = await compressImage(t.files[0]);
+      if(F._url){ URL.revokeObjectURL(F._url); F._url = null; }
+      F.photo = blob;
+      F.aiDone = false;
+      if(hasAI()){
+        F.analyzing = true;
+        renderEdit();
+        const mine = F;
+        try{
+          const res = await analyzePhoto(blob);
+          if(F !== mine) return;
+          if(res.cat === "other") toast("Dit lijkt geen kledingstuk. Vul het zelf in.");
+          else applyAI(res);
+        }catch(err){
+          if(F === mine) toast(err.message);
+        }finally{
+          mine.analyzing = false;
+        }
+      }
+      renderEdit();
+    }catch(err){ toast(err.message); }
+  }
+  if(t.id === "f-rain" && F) F.rainproof = t.checked;
+  if(t.id === "wx-rain"){
+    const plan = ensurePlan();
+    if(plan.override){ plan.override.rain = t.checked; await saveKV(); render(); }
+  }
+  if(t.id === "bulk-file" && t.files && t.files.length){ const fs = Array.from(t.files); t.value = ""; await bulkAdd(fs); }
+  if(t.id === "import-file" && t.files && t.files[0]){ await importData(t.files[0]); t.value = ""; }
+});
+document.addEventListener("keydown", e => {
+  if(e.key === "Enter" && e.target.id === "city-q"){ e.preventDefault(); citySearch(); }
+  if(e.key === "Escape" && !$("#sheet").hidden) closeSheet();
+});
+
+/* ---------- Init ---------- */
+function defaultOcc(){
+  const d = new Date().getDay();
+  const weekend = d === 0 || d === 6;
+  return weekend ? (S.kv.weekendOcc || "casual") : (S.kv.weekdayOcc || "werk");
+}
+async function loadWornToday(){
+  const all = await idb.all("log");
+  const today = todayKey();
+  S.wornToday = {};
+  for(const e of all){
+    if(e.date === today) S.wornToday[e.occ] = e;
+    else if(daysSince(e.date) > 120) idb.del("log", e.key);
+  }
+}
+let lastDay = null;
+async function refreshIfNewDay(){
+  const t = todayKey();
+  if(lastDay && lastDay !== t){
+    await loadWornToday();
+    S.occ = defaultOcc();
+  }
+  lastDay = t;
+  await loadWeather(false);
+  render();
+}
+async function init(){
+  try{
+    if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    S.items = await idb.all("items");
+    S.kv = (await idb.get("kv", "settings")) || {};
+    await loadWornToday();
+  }catch(e){
+    $("#view-today").innerHTML = `<div class="empty"><h2>Opslag niet beschikbaar</h2><p>Kast kan geen gegevens bewaren. Gebruik je privénavigatie? Open de pagina dan in een gewoon Safari-venster.</p></div>`;
+    return;
+  }
+  S.occ = defaultOcc();
+  lastDay = todayKey();
+  if(S.kv.wx && S.kv.wx.date === todayKey()) S.weather = S.kv.wx;
+  S.wxLoading = !!S.kv.loc && !S.weather;
+  render();
+  await loadWeather(false);
+  render();
+}
+document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") refreshIfNewDay(); });
+init();
+
+if("serviceWorker" in navigator && location.protocol === "https:"){
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
